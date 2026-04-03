@@ -104,15 +104,10 @@ const authorEntry = d.authorSlug
       <div class="offers-grid">
         {d.bonuses.map((bonus) => (
           <div class="offer-card">
-            <span class="offer-card__type">{bonus.type}</span>
             <strong class="offer-card__name">{bonus.name}</strong>
-            <ul class="offer-card__terms">
-              {bonus.wagering && <li><span>Wagering</span>{bonus.wagering}</li>}
-              {bonus.min_deposit && <li><span>Min Deposit</span>{bonus.min_deposit}</li>}
-              {bonus.max_cashout && <li><span>Max Cashout</span>{bonus.max_cashout}</li>}
-              {bonus.free_spins && <li><span>Free Spins</span>{bonus.free_spins}</li>}
-              {bonus.expiry && <li><span>Expiry</span>{bonus.expiry}</li>}
-            </ul>
+            {bonus.free_spins && (
+              <span class="offer-card__spins">{bonus.free_spins} Free Spins</span>
+            )}
             {d.casino && (
               <div class="offer-card__cta">
                 <CTAButton href={`/go/${d.casino}/`} label="Claim" variant="outline" />
@@ -231,11 +226,8 @@ const authorEntry = d.authorSlug
     border-radius: 10px; padding: 1rem 1.15rem;
     display: flex; flex-direction: column; gap: 0.5rem;
   }
-  .offer-card__type { display: inline-block; padding: 0.18rem 0.5rem; background: rgba(240 192 64 / 0.1); color: #f0c040; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; align-self: flex-start; }
   .offer-card__name { font-size: 0.9rem; color: #eef0fa; }
-  .offer-card__terms { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8rem; }
-  .offer-card__terms li { display: flex; gap: 0.5rem; color: #7a80a0; }
-  .offer-card__terms li span { color: #585d7a; min-width: 85px; }
+  .offer-card__spins { font-size: 0.8rem; color: #f0c040; font-weight: 600; }
   .offer-card__cta { margin-top: auto; }
 
   /* Pros & Cons */
