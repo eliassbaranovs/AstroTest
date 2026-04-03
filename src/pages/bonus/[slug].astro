@@ -1,0 +1,273 @@
+---
+import { getCollection, getEntry, render } from "astro:content";
+import AuthorCard from "../../components/AuthorCard.astro";
+import CTAButton from "../../components/CTAButton.astro";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("bonuses");
+  return posts
+    .filter((p) => !p.data.draft)
+    .map((post) => ({ params: { slug: post.data.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const d = post.data;
+const { Content } = await render(post);
+
+const authorEntry = d.authorSlug
+  ? await getEntry("authors", d.authorSlug)
+  : undefined;
+---
+
+<Layout
+  title={d.title}
+  seoTitle={d.seoTitle}
+  description={d.description}
+  image={d.image}
+  imageAlt={d.imageAlt}
+  canonical={d.canonical}
+  robots={d.robots}
+  schemaJsonLd={d.schemaJsonLd}
+  noIndex={d.noIndex}
+  ogType="article"
+>
+  <!-- Breadcrumbs -->
+  <nav class="breadcrumbs container" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Home</a></li>
+      <li><a href="/bonus/">Bonuses</a></li>
+      <li aria-current="page">{d.title}</li>
+    </ol>
+  </nav>
+
+  <!-- Bonus Hero Banner -->
+  <div class="bonus-hero">
+    <div class="bonus-hero__inner container">
+      <div class="bonus-hero__brand">
+        {d.logo
+          ? <img src={d.logo} alt={`${d.casinoName} logo`} width="72" height="72" class="bonus-hero__logo" />
+          : <div class="bonus-hero__logo-placeholder">{(d.casinoName ?? "?")[0]}</div>
+        }
+        {d.casinoName && <span class="bonus-hero__casino">{d.casinoName}</span>}
+      </div>
+
+      <div class="bonus-hero__details">
+        <h1 class="bonus-hero__title">{d.bonus_title ?? d.title}</h1>
+        <div class="bonus-hero__stats">
+          {d.bonus_percentage && (
+            <div class="hero-stat">
+              <span class="hero-stat__val">{d.bonus_percentage}%</span>
+              <span class="hero-stat__label">Match</span>
+            </div>
+          )}
+          {d.max_bonus && (
+            <div class="hero-stat">
+              <span class="hero-stat__val">{d.max_bonus}</span>
+              <span class="hero-stat__label">Max Bonus</span>
+            </div>
+          )}
+          {d.free_spins && (
+            <div class="hero-stat">
+              <span class="hero-stat__val">{d.free_spins}</span>
+              <span class="hero-stat__label">Free Spins</span>
+            </div>
+          )}
+          {d.wagering && (
+            <div class="hero-stat">
+              <span class="hero-stat__val">{d.wagering}</span>
+              <span class="hero-stat__label">Wagering</span>
+            </div>
+          )}
+          {d.min_deposit && (
+            <div class="hero-stat">
+              <span class="hero-stat__val">{d.min_deposit}</span>
+              <span class="hero-stat__label">Min Deposit</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div class="bonus-hero__cta">
+        {d.casino && <CTAButton href={`/go/${d.casino}/`} label="Claim Bonus" />}
+        {d.casino && (
+          <a href={`/casinos/${d.casino}/`} class="bonus-hero__review-link">Full Casino Review →</a>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <!-- All bonus offers from this casino -->
+  {d.bonuses?.length && (
+    <div class="container bonus-offers">
+      <h2 class="bonus-offers__heading">All Current Offers</h2>
+      <div class="offers-grid">
+        {d.bonuses.map((bonus) => (
+          <div class="offer-card">
+            <span class="offer-card__type">{bonus.type}</span>
+            <strong class="offer-card__name">{bonus.name}</strong>
+            <ul class="offer-card__terms">
+              {bonus.wagering && <li><span>Wagering</span>{bonus.wagering}</li>}
+              {bonus.min_deposit && <li><span>Min Deposit</span>{bonus.min_deposit}</li>}
+              {bonus.max_cashout && <li><span>Max Cashout</span>{bonus.max_cashout}</li>}
+              {bonus.free_spins && <li><span>Free Spins</span>{bonus.free_spins}</li>}
+              {bonus.expiry && <li><span>Expiry</span>{bonus.expiry}</li>}
+            </ul>
+            {d.casino && (
+              <div class="offer-card__cta">
+                <CTAButton href={`/go/${d.casino}/`} label="Claim" variant="outline" />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Pros & Cons -->
+  {(d.pros?.length || d.cons?.length) && (
+    <div class="container">
+      <div class="pros-cons" aria-label="Pros and Cons">
+        {d.pros?.length && (
+          <div class="pros-cons__col pros-cons__col--pros">
+            <h3>Pros</h3>
+            <ul>{d.pros.map((item) => <li>{item}</li>)}</ul>
+          </div>
+        )}
+        {d.cons?.length && (
+          <div class="pros-cons__col pros-cons__col--cons">
+            <h3>Cons</h3>
+            <ul>{d.cons.map((item) => <li>{item}</li>)}</ul>
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+
+  <!-- Article body -->
+  <div class="container bonus-body prose">
+    <Content />
+  </div>
+
+  <!-- FAQs -->
+  {d.faqs?.length && (
+    <div class="container faqs">
+      <h2>Frequently Asked Questions</h2>
+      {d.faqs.map((faq) => (
+        <details class="faq-item">
+          <summary class="faq-item__q">{faq.question}</summary>
+          <p class="faq-item__a">{faq.answer}</p>
+        </details>
+      ))}
+    </div>
+  )}
+
+  <!-- Author -->
+  {authorEntry && (
+    <div class="container">
+      <AuthorCard
+        name={authorEntry.data.name}
+        slug={authorEntry.data.slug}
+        bio={authorEntry.data.bio}
+        avatar={authorEntry.data.avatar}
+        role={authorEntry.data.role}
+        credentials={authorEntry.data.credentials}
+      />
+    </div>
+  )}
+</Layout>
+
+<style>
+  /* Breadcrumbs */
+  .breadcrumbs { padding: 0.75rem 0; }
+  .breadcrumbs ol { list-style: none; padding: 0; margin: 0; display: flex; gap: 0.5rem; font-size: 0.82rem; color: #585d7a; flex-wrap: wrap; }
+  .breadcrumbs li + li::before { content: "/"; margin-right: 0.5rem; }
+  .breadcrumbs a { color: #7a80a0; text-decoration: none; }
+  .breadcrumbs a:hover { color: #f0c040; }
+
+  /* Hero */
+  .bonus-hero {
+    background: linear-gradient(160deg, #1a1028 0%, #0f1824 100%);
+    border-bottom: 1px solid rgba(255 255 255 / 0.06);
+    padding: 2rem 0;
+    margin-bottom: 2.5rem;
+  }
+  .bonus-hero__inner {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.75rem;
+    align-items: center;
+  }
+  .bonus-hero__brand { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+  .bonus-hero__logo { width: 72px; height: 72px; object-fit: contain; border-radius: 10px; }
+  .bonus-hero__logo-placeholder {
+    width: 72px; height: 72px; border-radius: 10px;
+    background: rgba(255 255 255 / 0.06);
+    display: grid; place-items: center;
+    font-size: 2rem; font-weight: 800; color: #f0c040;
+  }
+  .bonus-hero__casino { font-size: 0.78rem; color: #7a80a0; }
+
+  .bonus-hero__title { margin: 0 0 1rem; font-size: clamp(1.1rem, 3vw, 1.5rem); color: #eef0fa; }
+  .bonus-hero__stats { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; }
+  .hero-stat { display: flex; flex-direction: column; }
+  .hero-stat__val {
+    font-size: 1.35rem; font-weight: 800; line-height: 1;
+    background: linear-gradient(135deg, #f0c040, #e07b20);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero-stat__label { font-size: 0.7rem; color: #585d7a; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.15rem; }
+
+  .bonus-hero__cta { display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
+  .bonus-hero__review-link { font-size: 0.82rem; color: #7a80a0; text-decoration: none; white-space: nowrap; }
+  .bonus-hero__review-link:hover { color: #f0c040; }
+
+  /* Offers grid */
+  .bonus-offers { margin-bottom: 2.5rem; }
+  .bonus-offers__heading { margin-bottom: 1rem; }
+  .offers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+  .offer-card {
+    background: #14141f; border: 1px solid rgba(255 255 255 / 0.07);
+    border-radius: 10px; padding: 1rem 1.15rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .offer-card__type { display: inline-block; padding: 0.18rem 0.5rem; background: rgba(240 192 64 / 0.1); color: #f0c040; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; align-self: flex-start; }
+  .offer-card__name { font-size: 0.9rem; color: #eef0fa; }
+  .offer-card__terms { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8rem; }
+  .offer-card__terms li { display: flex; gap: 0.5rem; color: #7a80a0; }
+  .offer-card__terms li span { color: #585d7a; min-width: 85px; }
+  .offer-card__cta { margin-top: auto; }
+
+  /* Pros & Cons */
+  .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2.5rem; }
+  .pros-cons__col { background: #14141f; border-radius: 10px; padding: 1rem 1.25rem; border: 1px solid rgba(255 255 255 / 0.07); }
+  .pros-cons__col--pros { border-top: 3px solid #4cda7a; }
+  .pros-cons__col--cons { border-top: 3px solid #e05050; }
+  .pros-cons__col h3 { margin: 0 0 0.65rem; font-size: 0.95rem; }
+  .pros-cons__col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.88rem; }
+  .pros-cons__col--pros ul li::before { content: "✓ "; color: #4cda7a; }
+  .pros-cons__col--cons ul li::before { content: "✗ "; color: #e05050; }
+
+  /* Body prose */
+  .bonus-body { padding-bottom: 2.5rem; }
+  .prose :global(h2) { font-size: 1.45rem; border-bottom: 1px solid rgba(255 255 255 / 0.07); padding-bottom: 0.4rem; }
+  .prose :global(a) { color: #f0c040; }
+  .prose :global(strong) { color: #eef0fa; }
+  .prose :global(table) { margin: 1.25rem 0; font-size: 0.88rem; }
+
+  /* FAQs */
+  .faqs { padding-bottom: 3rem; }
+  .faq-item { border: 1px solid rgba(255 255 255 / 0.07); border-radius: 8px; margin-bottom: 0.6rem; overflow: hidden; }
+  .faq-item__q { padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; color: #eef0fa; list-style: none; }
+  .faq-item__q::-webkit-details-marker { display: none; }
+  .faq-item__q::after { content: " +"; color: #f0c040; }
+  .faq-item[open] .faq-item__q::after { content: " −"; }
+  .faq-item__a { padding: 0 1rem 0.9rem; margin: 0; color: #8a90b0; }
+
+  @media (max-width: 760px) {
+    .bonus-hero__inner { grid-template-columns: 1fr; grid-template-rows: auto; }
+    .bonus-hero__brand { flex-direction: row; }
+    .bonus-hero__cta { flex-direction: row; align-items: center; }
+    .pros-cons { grid-template-columns: 1fr; }
+  }
+</style>

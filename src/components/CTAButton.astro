@@ -1,0 +1,35 @@
+---
+interface Props {
+  href: string;
+  label?: string;
+  variant?: "primary" | "outline";
+}
+const { href, label = "Claim Bonus", variant = "primary" } = Astro.props;
+---
+
+<a href={href} class={`cta-btn cta-btn--${variant}`} rel="nofollow sponsored" target="_blank">
+  {label}
+</a>
+
+<style>
+  .cta-btn {
+    display: inline-block;
+    padding: 0.65rem 1.4rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: opacity 0.15s, transform 0.1s;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .cta-btn--primary {
+    background: linear-gradient(135deg, #f0c040, #e07b20);
+    color: #0b0b16;
+  }
+  .cta-btn--outline {
+    border: 2px solid #f0c040;
+    color: #f0c040;
+  }
+</style>

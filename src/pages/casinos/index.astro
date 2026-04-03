@@ -1,0 +1,137 @@
+---
+import { getCollection } from "astro:content";
+import CTAButton from "../../components/CTAButton.astro";
+import RatingBadge from "../../components/RatingBadge.astro";
+import Layout from "../../layouts/Layout.astro";
+
+const allPosts = await getCollection("casinos");
+const reviews = allPosts
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => (b.data.ourRating ?? 0) - (a.data.ourRating ?? 0));
+---
+
+<Layout
+  title="Best Online Casino Reviews 2026"
+  seoTitle="Best Online Casino Reviews 2026 — CasinoRank"
+  description="Expert casino reviews updated for 2026. Compare ratings, bonuses, game libraries, and payment methods to find the best casino for you."
+>
+  <div class="container">
+    <div class="page-header">
+      <h1>Casino Reviews</h1>
+      <p class="page-header__sub">
+        We test and rate every casino on bonuses, game variety, payout speed, and player protection.
+        Updated {new Date().getFullYear()}.
+      </p>
+    </div>
+
+    <ul class="casino-list" role="list">
+      {reviews.map((post) => {
+        const d = post.data;
+        return (
+          <li class="casino-card">
+            <div class="casino-card__logo-wrap">
+              {d.logo
+                ? <img src={d.logo} alt={`${d.casinoName} logo`} width="80" height="80" class="casino-card__logo" loading="lazy" />
+                : <div class="casino-card__logo-placeholder">{(d.casinoName ?? "?")[0]}</div>
+              }
+            </div>
+
+            <div class="casino-card__body">
+              <div class="casino-card__top">
+                <h2 class="casino-card__name">
+                  <a href={`/casinos/${d.slug}/`}>{d.casinoName}</a>
+                </h2>
+                {d.ourRating && <RatingBadge rating={d.ourRating} size="sm" />}
+              </div>
+
+              {d.best_for && <p class="casino-card__best-for">Best for: {d.best_for}</p>}
+              {d.excerpt && <p class="casino-card__excerpt">{d.excerpt}</p>}
+
+              <ul class="casino-card__facts">
+                {d.bonus_title && <li><span class="fact-label">Bonus</span>{d.bonus_title}</li>}
+                {d.licences && <li><span class="fact-label">Licence</span>{d.licences}</li>}
+                {d.game_count && <li><span class="fact-label">Games</span>{d.game_count.toLocaleString()}+</li>}
+                {d.established && <li><span class="fact-label">Est.</span>{d.established}</li>}
+              </ul>
+            </div>
+
+            <div class="casino-card__actions">
+              <CTAButton href={`/go/${d.casino}/`} label="Visit Casino" />
+              <a href={`/casinos/${d.slug}/`} class="casino-card__review-link">Read Review →</a>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+
+    {reviews.length === 0 && (
+      <p class="empty-state">No casino reviews published yet.</p>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .page-header { padding: 2.5rem 0 1.5rem; }
+  .page-header__sub { color: #8a90b0; font-size: 1.05rem; max-width: 640px; }
+
+  .casino-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-bottom: 3rem;
+  }
+
+  .casino-card {
+    display: grid;
+    grid-template-columns: 90px 1fr auto;
+    gap: 1.25rem;
+    align-items: center;
+    background: #14141f;
+    border: 1px solid rgba(255 255 255 / 0.07);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    transition: border-color 0.15s;
+  }
+  .casino-card:hover { border-color: rgba(240 192 64 / 0.4); }
+
+  .casino-card__logo-wrap { display: flex; align-items: center; justify-content: center; }
+  .casino-card__logo { width: 80px; height: 80px; object-fit: contain; border-radius: 8px; }
+  .casino-card__logo-placeholder {
+    width: 80px; height: 80px; border-radius: 8px;
+    background: rgba(255 255 255 / 0.06);
+    display: grid; place-items: center;
+    font-size: 2rem; font-weight: 800; color: #f0c040;
+  }
+
+  .casino-card__top { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+  .casino-card__name { margin: 0; font-size: 1.1rem; }
+  .casino-card__name a { color: #eef0fa; text-decoration: none; }
+  .casino-card__name a:hover { color: #f0c040; }
+
+  .casino-card__best-for { margin: 0 0 0.35rem; font-size: 0.82rem; color: #f0c040; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .casino-card__excerpt { margin: 0 0 0.75rem; color: #8a90b0; font-size: 0.9rem; line-height: 1.5; }
+
+  .casino-card__facts {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem;
+    font-size: 0.82rem; color: #a0a5c0;
+  }
+  .casino-card__facts li { display: flex; gap: 0.35rem; }
+  .fact-label { color: #585d7a; }
+
+  .casino-card__actions { display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; min-width: 130px; }
+  .casino-card__review-link { font-size: 0.85rem; color: #8a90b0; text-decoration: none; white-space: nowrap; }
+  .casino-card__review-link:hover { color: #f0c040; }
+
+  .empty-state { color: #585d7a; text-align: center; padding: 3rem 0; }
+
+  @media (max-width: 680px) {
+    .casino-card { grid-template-columns: 60px 1fr; grid-template-rows: auto auto; }
+    .casino-card__logo { width: 60px; height: 60px; }
+    .casino-card__logo-placeholder { width: 60px; height: 60px; font-size: 1.5rem; }
+    .casino-card__actions { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; }
+  }
+</style>

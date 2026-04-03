@@ -1,0 +1,333 @@
+---
+import { getCollection, getEntry, render } from "astro:content";
+import AuthorCard from "../../components/AuthorCard.astro";
+import CTAButton from "../../components/CTAButton.astro";
+import RatingBadge from "../../components/RatingBadge.astro";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("casinos");
+  return posts
+    .filter((p) => !p.data.draft)
+    .map((post) => ({ params: { slug: post.data.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const d = post.data;
+const { Content } = await render(post);
+
+const depositArr = d.depositMethods?.split("|").map((s) => s.trim()) ?? [];
+const withdrawalArr = d.withdrawalMethods?.split("|").map((s) => s.trim()) ?? [];
+const providersArr = d.gameProviders?.split("|").map((s) => s.trim()) ?? [];
+
+const authorEntry = d.authorSlug
+  ? await getEntry("authors", d.authorSlug)
+  : undefined;
+---
+
+<Layout
+  title={d.title}
+  seoTitle={d.seoTitle}
+  description={d.description}
+  image={d.image}
+  imageAlt={d.imageAlt}
+  canonical={d.canonical}
+  robots={d.robots}
+  schemaJsonLd={d.schemaJsonLd}
+  noIndex={d.noIndex}
+  ogType="article"
+>
+  <!-- Breadcrumbs -->
+  <nav class="breadcrumbs container" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Home</a></li>
+      <li><a href="/casinos/">Casinos</a></li>
+      <li aria-current="page">{d.casinoName}</li>
+    </ol>
+  </nav>
+
+  <!-- Hero -->
+  <div class="review-hero container">
+    <div class="review-hero__left">
+      {d.logo
+        ? <img src={d.logo} alt={`${d.casinoName} logo`} width="96" height="96" class="review-hero__logo" />
+        : <div class="review-hero__logo-placeholder">{(d.casinoName ?? "?")[0]}</div>
+      }
+    </div>
+    <div class="review-hero__info">
+      <h1 class="review-hero__title">{d.title}</h1>
+      {d.best_for && <p class="review-hero__best-for">Best for: {d.best_for}</p>}
+      <div class="review-hero__meta">
+        {d.ourRating && <RatingBadge rating={d.ourRating} size="lg" />}
+        {d.casino_type && <span class="tag">{d.casino_type}</span>}
+        {d.isNewCasino && <span class="tag tag--new">New</span>}
+      </div>
+    </div>
+    <div class="review-hero__cta">
+      {d.casino && <CTAButton href={`/go/${d.casino}/`} label="Visit Casino" />}
+      {d.bonus_title && (
+        <p class="review-hero__bonus-hint">{d.bonus_title}</p>
+      )}
+    </div>
+  </div>
+
+  <!-- Key Facts Table -->
+  <div class="container">
+    <div class="key-facts">
+      {d.licences && <div class="key-facts__item"><span class="key-facts__label">Licence</span><span>{d.licences}</span></div>}
+      {d.established && <div class="key-facts__item"><span class="key-facts__label">Established</span><span>{d.established}</span></div>}
+      {d.game_count && <div class="key-facts__item"><span class="key-facts__label">Games</span><span>{d.game_count.toLocaleString()}+</span></div>}
+      {d.cryptoWithdrawalSpeedMinutes && <div class="key-facts__item"><span class="key-facts__label">Crypto Payout</span><span>~{d.cryptoWithdrawalSpeedMinutes} min</span></div>}
+      {d.min_deposit && <div class="key-facts__item"><span class="key-facts__label">Min Deposit</span><span>{d.min_deposit}</span></div>}
+      {d.wagering && <div class="key-facts__item"><span class="key-facts__label">Wagering</span><span>{d.wagering}</span></div>}
+      {d.kycRequired !== undefined && <div class="key-facts__item"><span class="key-facts__label">KYC Required</span><span>{d.kycRequired ? "Yes" : "No"}</span></div>}
+      {d.lastVerified && <div class="key-facts__item"><span class="key-facts__label">Last Verified</span><span>{d.lastVerified}</span></div>}
+    </div>
+  </div>
+
+  <!-- Content columns -->
+  <div class="container review-layout">
+    <article class="review-body prose">
+      <Content />
+
+      <!-- Pros & Cons -->
+      {(d.pros?.length || d.cons?.length) && (
+        <section class="pros-cons" aria-label="Pros and Cons">
+          <h2>Pros &amp; Cons</h2>
+          <div class="pros-cons__grid">
+            {d.pros?.length && (
+              <div class="pros-cons__col pros-cons__col--pros">
+                <h3>Pros</h3>
+                <ul>
+                  {d.pros.map((item) => <li>{item}</li>)}
+                </ul>
+              </div>
+            )}
+            {d.cons?.length && (
+              <div class="pros-cons__col pros-cons__col--cons">
+                <h3>Cons</h3>
+                <ul>
+                  {d.cons.map((item) => <li>{item}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <!-- FAQs -->
+      {d.faqs?.length && (
+        <section class="faqs" aria-label="Frequently Asked Questions">
+          <h2>Frequently Asked Questions</h2>
+          {d.faqs.map((faq) => (
+            <details class="faq-item">
+              <summary class="faq-item__q">{faq.question}</summary>
+              <p class="faq-item__a">{faq.answer}</p>
+            </details>
+          ))}
+        </section>
+      )}
+    </article>
+
+    <!-- Sidebar -->
+    <aside class="review-sidebar">
+      <!-- All Bonuses -->
+      {d.bonuses?.length && (
+        <div class="sidebar-card">
+          <h3 class="sidebar-card__title">All Bonuses</h3>
+          {d.bonuses.map((bonus) => (
+            <div class="bonus-row">
+              <span class="bonus-row__tag">{bonus.type}</span>
+              <strong class="bonus-row__name">{bonus.name}</strong>
+              <ul class="bonus-row__details">
+                {bonus.wagering && <li>Wagering: {bonus.wagering}</li>}
+                {bonus.min_deposit && <li>Min deposit: {bonus.min_deposit}</li>}
+                {bonus.expiry && <li>Expiry: {bonus.expiry}</li>}
+              </ul>
+            </div>
+          ))}
+          {d.casino && <CTAButton href={`/go/${d.casino}/`} label="Claim Bonus" variant="primary" />}
+        </div>
+      )}
+
+      <!-- Cryptos Accepted -->
+      {d.acceptedCryptos?.length && (
+        <div class="sidebar-card">
+          <h3 class="sidebar-card__title">Accepted Crypto</h3>
+          <ul class="crypto-list">
+            {d.acceptedCryptos.map((c) => <li class="crypto-list__item">{c}</li>)}
+          </ul>
+        </div>
+      )}
+
+      <!-- Deposit / Withdrawal -->
+      {(depositArr.length > 0 || withdrawalArr.length > 0) && (
+        <div class="sidebar-card">
+          <h3 class="sidebar-card__title">Payments</h3>
+          {depositArr.length > 0 && (
+            <>
+              <p class="sidebar-card__label">Deposit</p>
+              <ul class="method-list">{depositArr.map((m) => <li>{m}</li>)}</ul>
+            </>
+          )}
+          {withdrawalArr.length > 0 && (
+            <>
+              <p class="sidebar-card__label">Withdrawal</p>
+              <ul class="method-list">{withdrawalArr.map((m) => <li>{m}</li>)}</ul>
+            </>
+          )}
+        </div>
+      )}
+
+      <!-- Game Providers -->
+      {providersArr.length > 0 && (
+        <div class="sidebar-card">
+          <h3 class="sidebar-card__title">Game Providers</h3>
+          <ul class="method-list">{providersArr.map((p) => <li>{p}</li>)}</ul>
+        </div>
+      )}
+
+      <!-- Screenshots -->
+      {d.screenshots?.length && (
+        <div class="sidebar-card">
+          <h3 class="sidebar-card__title">Screenshots</h3>
+          <div class="screenshot-grid">
+            {d.screenshots.map((s) => (
+              <img src={s.url} alt={s.alt} loading="lazy" class="screenshot-grid__img" />
+            ))}
+          </div>
+        </div>
+      )}
+    </aside>
+  </div>
+
+  <!-- Author -->
+  {authorEntry && (
+    <div class="container">
+      <AuthorCard
+        name={authorEntry.data.name}
+        slug={authorEntry.data.slug}
+        bio={authorEntry.data.bio}
+        avatar={authorEntry.data.avatar}
+        role={authorEntry.data.role}
+        credentials={authorEntry.data.credentials}
+      />
+    </div>
+  )}
+</Layout>
+
+<style>
+  /* Breadcrumbs */
+  .breadcrumbs { padding: 0.75rem 0; }
+  .breadcrumbs ol { list-style: none; padding: 0; margin: 0; display: flex; gap: 0.5rem; font-size: 0.82rem; color: #585d7a; flex-wrap: wrap; }
+  .breadcrumbs li + li::before { content: "/"; margin-right: 0.5rem; }
+  .breadcrumbs a { color: #7a80a0; text-decoration: none; }
+  .breadcrumbs a:hover { color: #f0c040; }
+
+  /* Hero */
+  .review-hero {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.5rem;
+    align-items: start;
+    padding: 1.5rem 0 2rem;
+  }
+  .review-hero__logo { width: 96px; height: 96px; object-fit: contain; border-radius: 12px; }
+  .review-hero__logo-placeholder {
+    width: 96px; height: 96px; border-radius: 12px;
+    background: rgba(255 255 255 / 0.06);
+    display: grid; place-items: center;
+    font-size: 2.5rem; font-weight: 800; color: #f0c040;
+  }
+  .review-hero__title { margin: 0 0 0.35rem; }
+  .review-hero__best-for { margin: 0 0 0.6rem; font-size: 0.85rem; color: #f0c040; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .review-hero__meta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+  .review-hero__cta { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+  .review-hero__bonus-hint { margin: 0; font-size: 0.78rem; color: #7a80a0; text-align: right; max-width: 160px; }
+
+  .tag { display: inline-block; padding: 0.2rem 0.55rem; background: rgba(255 255 255 / 0.07); border-radius: 4px; font-size: 0.75rem; color: #8a90b0; }
+  .tag--new { background: rgba(76 218 122 / 0.15); color: #4cda7a; }
+
+  /* Key Facts */
+  .key-facts {
+    display: flex; flex-wrap: wrap; gap: 0;
+    background: #14141f; border: 1px solid rgba(255 255 255 / 0.07); border-radius: 10px;
+    overflow: hidden; margin-bottom: 2.5rem;
+  }
+  .key-facts__item {
+    flex: 1 1 160px;
+    padding: 0.85rem 1rem;
+    border-right: 1px solid rgba(255 255 255 / 0.07);
+    border-bottom: 1px solid rgba(255 255 255 / 0.07);
+    display: flex; flex-direction: column; gap: 0.2rem;
+    font-size: 0.88rem;
+  }
+  .key-facts__label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #585d7a; }
+
+  /* Layout */
+  .review-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 2.5rem;
+    align-items: start;
+    padding-bottom: 3rem;
+  }
+
+  /* Prose */
+  .prose :global(h2) { font-size: 1.45rem; border-bottom: 1px solid rgba(255 255 255 / 0.07); padding-bottom: 0.4rem; }
+  .prose :global(h3) { font-size: 1.1rem; }
+  .prose :global(a) { color: #f0c040; }
+  .prose :global(strong) { color: #eef0fa; }
+
+  /* Pros & Cons */
+  .pros-cons { margin: 2rem 0; }
+  .pros-cons__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .pros-cons__col { background: #14141f; border-radius: 10px; padding: 1rem 1.25rem; border: 1px solid rgba(255 255 255 / 0.07); }
+  .pros-cons__col--pros { border-top: 3px solid #4cda7a; }
+  .pros-cons__col--cons { border-top: 3px solid #e05050; }
+  .pros-cons__col h3 { margin: 0 0 0.65rem; font-size: 0.95rem; }
+  .pros-cons__col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+  .pros-cons__col--pros ul li::before { content: "✓ "; color: #4cda7a; }
+  .pros-cons__col--cons ul li::before { content: "✗ "; color: #e05050; }
+
+  /* FAQs */
+  .faqs { margin: 2rem 0; }
+  .faq-item { border: 1px solid rgba(255 255 255 / 0.07); border-radius: 8px; margin-bottom: 0.6rem; overflow: hidden; }
+  .faq-item__q { padding: 0.9rem 1rem; cursor: pointer; font-weight: 600; color: #eef0fa; list-style: none; }
+  .faq-item__q::-webkit-details-marker { display: none; }
+  .faq-item__q::after { content: " +"; color: #f0c040; }
+  .faq-item[open] .faq-item__q::after { content: " −"; }
+  .faq-item__a { padding: 0 1rem 0.9rem; margin: 0; color: #8a90b0; }
+
+  /* Sidebar */
+  .review-sidebar { display: flex; flex-direction: column; gap: 1rem; position: sticky; top: 4.5rem; }
+  .sidebar-card { background: #14141f; border: 1px solid rgba(255 255 255 / 0.07); border-radius: 10px; padding: 1rem 1.25rem; }
+  .sidebar-card__title { margin: 0 0 0.85rem; font-size: 0.95rem; color: #eef0fa; }
+  .sidebar-card__label { margin: 0.65rem 0 0.25rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #585d7a; }
+
+  .bonus-row { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255 255 255 / 0.06); }
+  .bonus-row:last-of-type { border-bottom: none; margin-bottom: 0.75rem; }
+  .bonus-row__tag { display: inline-block; padding: 0.15rem 0.45rem; background: rgba(240 192 64 / 0.12); color: #f0c040; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+  .bonus-row__name { display: block; font-size: 0.88rem; color: #eef0fa; margin-bottom: 0.4rem; }
+  .bonus-row__details { list-style: none; padding: 0; margin: 0; font-size: 0.78rem; color: #7a80a0; display: flex; flex-direction: column; gap: 0.15rem; }
+
+  .crypto-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .crypto-list__item { padding: 0.25rem 0.6rem; background: rgba(255 255 255 / 0.06); border-radius: 5px; font-size: 0.8rem; color: #a0a5c0; }
+
+  .method-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.82rem; color: #8a90b0; }
+  .method-list li::before { content: "· "; color: #585d7a; }
+
+  .screenshot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .screenshot-grid__img { border-radius: 6px; object-fit: cover; width: 100%; aspect-ratio: 16/9; }
+
+  @media (max-width: 900px) {
+    .review-layout { grid-template-columns: 1fr; }
+    .review-sidebar { position: static; }
+  }
+  @media (max-width: 680px) {
+    .review-hero { grid-template-columns: 64px 1fr; grid-template-rows: auto auto; }
+    .review-hero__logo, .review-hero__logo-placeholder { width: 64px; height: 64px; }
+    .review-hero__cta { grid-column: 1 / -1; flex-direction: row; }
+    .pros-cons__grid { grid-template-columns: 1fr; }
+  }
+</style>

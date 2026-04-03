@@ -1,0 +1,377 @@
+---
+import { getCollection } from "astro:content";
+import AuthorCard from "../../components/AuthorCard.astro";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const authors = await getCollection("authors");
+  return authors.map((author) => ({
+    params: { slug: author.data.slug },
+    props: { author },
+  }));
+}
+
+const { author } = Astro.props;
+const d = author.data;
+
+// Gather all articles by this author across all collections
+const [casinos, bonuses] = await Promise.all([
+  getCollection("casinos"),
+  getCollection("bonuses"),
+]);
+
+const authorCasinos = casinos
+  .filter((p) => p.data.authorSlug === d.slug && !p.data.draft)
+  .sort((a, b) => (b.data.ourRating ?? 0) - (a.data.ourRating ?? 0));
+
+const authorBonuses = bonuses
+  .filter((p) => p.data.authorSlug === d.slug && !p.data.draft)
+  .sort((a, b) =>
+    new Date(b.data.lastVerified ?? 0).getTime() -
+    new Date(a.data.lastVerified ?? 0).getTime()
+  );
+
+const totalArticles = authorCasinos.length + authorBonuses.length;
+---
+
+<Layout
+  title={`${d.name} — ${d.role ?? "Casino Analyst"} at CasinoRank`}
+  description={d.bio}
+  canonical={`https://casinorank.com/team/${d.slug}/`}
+  ogType="profile"
+>
+  <!-- Breadcrumbs -->
+  <nav class="breadcrumbs container" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Home</a></li>
+      <li><a href="/team/">Our Experts</a></li>
+      <li aria-current="page">{d.name}</li>
+    </ol>
+  </nav>
+
+  <!-- Profile Header -->
+  <div class="container profile-header">
+    <img
+      src={d.avatar}
+      alt={`${d.name} — ${d.role ?? "Casino Analyst"}`}
+      width="120"
+      height="120"
+      loading="eager"
+      decoding="async"
+      class="profile-avatar"
+      onerror="this.src='/images/authors/placeholder.png'"
+    />
+    <div class="profile-info">
+      <h1 class="profile-name">{d.name}</h1>
+      {d.role && <p class="profile-role">{d.role}</p>}
+      <p class="profile-bio">{d.bio}</p>
+
+      {d.credentials?.length && (
+        <ul class="profile-credentials">
+          {d.credentials.map((c) => <li>{c}</li>)}
+        </ul>
+      )}
+
+      {d.expertise?.length && (
+        <div class="profile-expertise">
+          <span class="profile-expertise__label">Specialisms:</span>
+          <ul>
+            {d.expertise.map((e) => <li>{e}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {d.socialLinks && (
+        <div class="profile-social">
+          {d.socialLinks.twitter && (
+            <a
+              href={d.socialLinks.twitter}
+              class="social-link"
+              rel="noopener noreferrer"
+              target="_blank"
+              aria-label={`${d.name} on Twitter / X`}
+            >
+              Twitter / X
+            </a>
+          )}
+          {d.socialLinks.linkedin && (
+            <a
+              href={d.socialLinks.linkedin}
+              class="social-link"
+              rel="noopener noreferrer"
+              target="_blank"
+              aria-label={`${d.name} on LinkedIn`}
+            >
+              LinkedIn
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+
+  <!-- Article counts -->
+  <div class="container article-counts">
+    <p>{totalArticles} article{totalArticles !== 1 ? "s" : ""} published</p>
+  </div>
+
+  <!-- Casino Reviews by this author -->
+  {authorCasinos.length > 0 && (
+    <section class="container author-section">
+      <h2 class="author-section__heading">Casino Reviews</h2>
+      <ul class="article-list">
+        {authorCasinos.map((entry) => (
+          <li class="article-list__item">
+            <a href={`/casinos/${entry.data.slug}/`} class="article-list__link">
+              {entry.data.casinoName ?? entry.data.title}
+            </a>
+            {entry.data.ourRating && (
+              <span class="article-list__meta">Rating: {entry.data.ourRating}/10</span>
+            )}
+            {entry.data.lastVerified && (
+              <span class="article-list__date">
+                Last verified: {entry.data.lastVerified}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <!-- Bonus Articles by this author -->
+  {authorBonuses.length > 0 && (
+    <section class="container author-section">
+      <h2 class="author-section__heading">Bonus Guides</h2>
+      <ul class="article-list">
+        {authorBonuses.map((entry) => (
+          <li class="article-list__item">
+            <a href={`/bonus/${entry.data.slug}/`} class="article-list__link">
+              {entry.data.bonus_title ?? entry.data.title}
+            </a>
+            {entry.data.lastVerified && (
+              <span class="article-list__date">
+                Last verified: {entry.data.lastVerified}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  {totalArticles === 0 && (
+    <div class="container">
+      <p class="no-articles">No published articles yet.</p>
+    </div>
+  )}
+
+  <!-- AuthorCard at bottom (self-referential — shows bio summary) -->
+  <div class="container">
+    <AuthorCard
+      name={d.name}
+      slug={d.slug}
+      bio={d.bio}
+      avatar={d.avatar}
+      role={d.role}
+      credentials={d.credentials}
+    />
+  </div>
+</Layout>
+
+<style>
+  /* Breadcrumbs */
+  .breadcrumbs { padding: 0.75rem 0; }
+  .breadcrumbs ol { list-style: none; padding: 0; margin: 0; display: flex; gap: 0.5rem; font-size: 0.82rem; color: #585d7a; flex-wrap: wrap; }
+  .breadcrumbs li + li::before { content: "/"; margin-right: 0.5rem; }
+  .breadcrumbs a { color: #7a80a0; text-decoration: none; }
+  .breadcrumbs a:hover { color: #f0c040; }
+
+  /* Profile */
+  .profile-header {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    padding-top: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #2a2a40;
+    flex-wrap: wrap;
+  }
+
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #f0c040;
+    flex-shrink: 0;
+  }
+
+  .profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 240px;
+  }
+
+  .profile-name {
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    color: #eef0fa;
+    margin: 0;
+  }
+
+  .profile-role {
+    color: #f0c040;
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .profile-bio {
+    color: #b0b0c8;
+    line-height: 1.65;
+    font-size: 0.95rem;
+    margin: 0;
+    max-width: 620px;
+  }
+
+  .profile-credentials {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .profile-credentials li {
+    font-size: 0.78rem;
+    color: #f0c040;
+    background: rgba(240, 192, 64, 0.08);
+    border: 1px solid rgba(240, 192, 64, 0.25);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+  }
+
+  .profile-expertise {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .profile-expertise__label {
+    font-size: 0.8rem;
+    color: #585d7a;
+    padding-top: 0.2rem;
+    white-space: nowrap;
+  }
+
+  .profile-expertise ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .profile-expertise ul li {
+    font-size: 0.78rem;
+    background: #1a1a2e;
+    color: #7a80a0;
+    border: 1px solid #2a2a40;
+    padding: 0.1rem 0.45rem;
+    border-radius: 3px;
+  }
+
+  .profile-social {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .social-link {
+    font-size: 0.82rem;
+    color: #7a80a0;
+    text-decoration: none;
+    border: 1px solid #2a2a40;
+    padding: 0.25rem 0.75rem;
+    border-radius: 5px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .social-link:hover {
+    color: #f0c040;
+    border-color: #f0c040;
+  }
+
+  /* Counts */
+  .article-counts {
+    padding: 0.75rem 0;
+    font-size: 0.85rem;
+    color: #585d7a;
+  }
+
+  /* Article sections */
+  .author-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .author-section__heading {
+    font-size: 1.1rem;
+    color: #eef0fa;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #2a2a40;
+  }
+
+  .article-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .article-list__item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    background: #13131f;
+    border: 1px solid #2a2a40;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+
+  .article-list__link {
+    color: #eef0fa;
+    text-decoration: none;
+    font-size: 0.95rem;
+    flex: 1;
+    min-width: 180px;
+  }
+  .article-list__link:hover {
+    color: #f0c040;
+  }
+
+  .article-list__meta {
+    font-size: 0.78rem;
+    color: #f0c040;
+  }
+
+  .article-list__date {
+    font-size: 0.75rem;
+    color: #585d7a;
+    margin-left: auto;
+  }
+
+  .no-articles {
+    color: #585d7a;
+    font-size: 0.9rem;
+    padding: 2rem 0;
+    text-align: center;
+  }
+</style>

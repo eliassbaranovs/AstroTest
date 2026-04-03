@@ -1,0 +1,145 @@
+---
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/casinos/", label: "Casino Reviews" },
+  { href: "/bonus/", label: "Bonuses" },
+  { href: "/news/", label: "News" },
+  { href: "/guides/", label: "Guides" },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__logo" aria-label="Home">
+      <span class="navbar__logo-text">CasinoRank</span>
+    </a>
+
+    <button class="navbar__toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <nav class="navbar__menu" id="nav-menu" role="navigation" aria-label="Main navigation">
+      <ul class="navbar__list">
+        {navLinks.map((link) => (
+          <li class="navbar__item">
+            <a
+              href={link.href}
+              class={`navbar__link${currentPath === link.href || (link.href !== "/" && currentPath.startsWith(link.href)) ? " navbar__link--active" : ""}`}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const toggle = document.getElementById("nav-toggle");
+  const menu = document.getElementById("nav-menu");
+  toggle?.addEventListener("click", () => {
+    const isOpen = menu?.classList.toggle("navbar__menu--open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  });
+</script>
+
+<style>
+  .navbar {
+    background: #0f0f1a;
+    border-bottom: 1px solid rgba(255 255 255 / 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .navbar__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 3.5rem;
+  }
+  .navbar__logo {
+    text-decoration: none;
+  }
+  .navbar__logo-text {
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f0c040, #e07b20);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+  }
+  .navbar__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 0.25rem;
+  }
+  .navbar__link {
+    display: block;
+    padding: 0.4rem 0.8rem;
+    color: #c9cde0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .navbar__link:hover {
+    color: #fff;
+    background: rgba(255 255 255 / 0.06);
+  }
+  .navbar__link--active {
+    color: #f0c040;
+    background: rgba(240 192 64 / 0.1);
+  }
+  /* Hamburger */
+  .navbar__toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .navbar__toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #c9cde0;
+    border-radius: 2px;
+    transition: background 0.15s;
+  }
+  @media (max-width: 680px) {
+    .navbar__toggle {
+      display: flex;
+    }
+    .navbar__menu {
+      display: none;
+      position: absolute;
+      top: 3.5rem;
+      left: 0;
+      right: 0;
+      background: #0f0f1a;
+      border-bottom: 1px solid rgba(255 255 255 / 0.08);
+      padding: 0.75rem 1.25rem 1rem;
+    }
+    .navbar__menu--open {
+      display: block;
+    }
+    .navbar__list {
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+  }
+</style>
