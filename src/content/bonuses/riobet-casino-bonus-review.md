@@ -4,8 +4,8 @@ slug: riobet-casino-bonus-review
 description: Complete RioBet Casino bonus breakdown — 8 offers including 100% up to 5,000 R$. Wagering terms, codes, and claim links.
 seoTitle: RioBet Casino Bonus 2026 | All 8 Offers
 excerpt: "8 bonus offers at RioBet Casino: 100% up to 5,000 R$ and 7 more."
-publishedAt: "2026-04-03T18:48:50.679Z"
-updatedAt: "2026-04-03T18:48:50.679Z"
+publishedAt: "2026-04-03T18:54:23.037Z"
+updatedAt: "2026-04-03T18:54:23.037Z"
 publishDate: "2026-04-03"
 author: Marcus Chen
 authorSlug: marcus-chen
