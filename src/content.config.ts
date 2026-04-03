@@ -5,7 +5,7 @@ import { defineCollection, z } from "astro:content";
 
 const bonusSchema = z.object({
   name: z.string(),
-  type: z.enum(["deposit", "no-deposit", "free-spins", "cashback", "reload"]),
+  type: z.string().optional(),
   wagering: z.string().optional(),
   min_deposit: z.string().optional(),
   max_cashout: z.string().optional(),
@@ -94,6 +94,7 @@ const casinoFields = {
   sectionImages: z.array(sectionImageSchema).optional(),
   faqs: z.array(faqSchema).optional(),
   claim_url: z.string().optional(),
+  categories: z.array(z.string()).optional(),
 };
 
 // ─── Collections ─────────────────────────────────────────────────────────────

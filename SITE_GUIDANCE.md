@@ -176,6 +176,12 @@ Internal links use relative paths: `[Casino Name](/casinos/slug/)`
 
 All structured data (bonuses, screenshots, ratings, pros/cons, FAQs) is in frontmatter. The body is prose content only.
 
+### Casino review body
+LLM-generated article covering the casino's bonuses, games, payments, licensing, pros/cons, and verdict. Pure prose — no bonus cards or images embedded. The Astro template renders those from frontmatter.
+
+### Bonus page body
+LLM-generated analysis of all bonus offers — overview, welcome bonus breakdown, free spins, ongoing promotions, wagering terms comparison, how to claim, and verdict. Pure prose + markdown tables. All bonus data is also available in frontmatter `bonuses[]` for structured rendering.
+
 ---
 
 ## Rules That Prevent Build Failures
