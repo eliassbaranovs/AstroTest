@@ -24,11 +24,14 @@ function transformNode(node) {
   });
 }
 
+function getAllText(node) {
+  if (node.type === "text") return node.value;
+  if (!node.children) return "";
+  return node.children.map(getAllText).join("");
+}
+
 function buildBonusCardNode(node) {
-  const text = node.children
-    .filter((c) => c.type === "text")
-    .map((c) => c.value)
-    .join("");
+  const text = getAllText(node);
 
   const d = {};
   text.split("\n").forEach((line) => {
@@ -57,7 +60,7 @@ function buildBonusCardNode(node) {
   parts.push(`<div class="bonus-card__brand">`);
   if (d.logo) {
     parts.push(
-      `<img src="${safeHref(d.logo)}" alt="${e(d.casino)} logo" class="bonus-card__logo" width="56" height="56" loading="lazy" />`
+      `<img src="${safeHref(d.logo)}" alt="${e(d.casino)} logo" class="bonus-card__logo" width="56" height="56" loading="lazy" />`,
     );
   }
   if (d.casino) {
@@ -74,9 +77,12 @@ function buildBonusCardNode(node) {
   }
   const stats = [];
   if (d.wagering) stats.push(`<span><b>Wagering:</b> ${e(d.wagering)}</span>`);
-  if (d.free_spins) stats.push(`<span><b>Free Spins:</b> ${e(d.free_spins)}</span>`);
-  if (d.min_deposit) stats.push(`<span><b>Min Deposit:</b> ${e(d.min_deposit)}</span>`);
-  if (d.max_cashout) stats.push(`<span><b>Max Cashout:</b> ${e(d.max_cashout)}</span>`);
+  if (d.free_spins)
+    stats.push(`<span><b>Free Spins:</b> ${e(d.free_spins)}</span>`);
+  if (d.min_deposit)
+    stats.push(`<span><b>Min Deposit:</b> ${e(d.min_deposit)}</span>`);
+  if (d.max_cashout)
+    stats.push(`<span><b>Max Cashout:</b> ${e(d.max_cashout)}</span>`);
   if (stats.length) {
     parts.push(`<div class="bonus-card__stats">${stats.join("")}</div>`);
   }
@@ -84,7 +90,7 @@ function buildBonusCardNode(node) {
 
   if (d.link) {
     parts.push(
-      `<a href="${safeHref(d.link)}" class="bonus-card__cta" rel="noopener noreferrer">Claim Bonus</a>`
+      `<a href="${safeHref(d.link)}" class="bonus-card__cta" rel="noopener noreferrer">Claim Bonus</a>`,
     );
   }
 
