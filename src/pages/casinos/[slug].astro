@@ -47,6 +47,21 @@ const authorEntry = d.authorSlug
     </ol>
   </nav>
 
+  <!-- Cover Image -->
+  {d.image && (
+    <div class="cover-image-wrap">
+      <img
+        src={d.image}
+        alt={d.imageAlt ?? `${d.casinoName} cover`}
+        width={d.imageWidth ?? 1792}
+        height={d.imageHeight ?? 1024}
+        class="cover-image"
+        loading="eager"
+        decoding="async"
+      />
+    </div>
+  )}
+
   <!-- Hero -->
   <div class="review-hero container">
     <div class="review-hero__left">
@@ -254,6 +269,9 @@ const authorEntry = d.authorSlug
   .review-hero__best-for { margin: 0 0 0.6rem; font-size: 0.85rem; color: #f0c040; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .review-hero__meta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
   .review-hero__cta { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+  .cover-image-wrap { width: 100%; max-height: 420px; overflow: hidden; margin-bottom: 0; }
+  .cover-image { width: 100%; height: 420px; object-fit: cover; object-position: center; display: block; }
+
   .review-hero__bonus-hint { margin: 0; font-size: 0.78rem; color: #7a80a0; text-align: right; max-width: 160px; }
 
   .tag { display: inline-block; padding: 0.2rem 0.55rem; background: rgba(255 255 255 / 0.07); border-radius: 4px; font-size: 0.75rem; color: #8a90b0; }
